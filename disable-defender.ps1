@@ -44,15 +44,16 @@ if(-Not $($(whoami) -eq "nt authority\system")) {
         Exit
     }
 
-    # Elevate to SYSTEM if psexec is available
-    $psexec_path = $(Get-Command PsExec -ErrorAction 'ignore').Source 
-    if($psexec_path) {
-        Write-Host "    [i] Elevate to SYSTEM"
-        $CommandLine = " -i -s powershell.exe -ExecutionPolicy Bypass `"" + $MyInvocation.MyCommand.Path + "`" " + $MyInvocation.UnboundArguments 
-        Start-Process -WindowStyle Hidden -FilePath $psexec_path -ArgumentList $CommandLine
+    # Elevate to SYSTEM / Trusted Installer if NSudo is available
+    $nsudo_path = $(Get-Command NSudo -ErrorAction 'ignore').Source 
+    if($nsudo_path) {
+        Write-Host "    [i] Elevate to SYSTEM / Trusted Installer"
+        $CommandLine = " -U:T powershell.exe -ExecutionPolicy Bypass `"" + $MyInvocation.MyCommand.Path + "`" " + $MyInvocation.UnboundArguments 
+        Start-Process -FilePath $nsudo_path -ArgumentList $CommandLine
         exit
     } else {
-        Write-Host "    [i] PsExec not found, will continue as Administrator"
+        Write-Host "    [i] NSudo not found, exiting as we won't be able to disable Defender"
+        exit
     }
 
 } else {
